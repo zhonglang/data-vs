@@ -140,7 +140,7 @@
             overflow: hidden;
         }
 
-        /* 9:16 视频容器 */
+        /* 视频内容样式 - Canvas 容器 */
         #video-stage {
             width: var(--preview-width);
             height: var(--preview-height);
@@ -150,197 +150,16 @@
             overflow: hidden;
             transform-origin: center center;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             border: 1px solid rgba(46,224,255,0.25);
-            border-radius: 28px;
+            border-radius: 4px; /* Canvas 不需要大圆角，或者保持一致 */
         }
 
-        #video-stage::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background-image:
-                linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
-            background-size: 32px 32px;
-            opacity: 0.6;
-            pointer-events: none;
-            border-radius: inherit;
+        #main-canvas {
+            display: block;
+            /* 确保 canvas 不会有额外边距 */
         }
-
-        #video-stage::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(180deg, transparent 0%, rgba(46,224,255,0.05) 50%, transparent 100%);
-            opacity: 0.35;
-            animation: scan 6s linear infinite;
-            pointer-events: none;
-            border-radius: inherit;
-        }
-
-        /* 视频内容样式 */
-        .stage-header {
-            height: 110px;
-            background: rgba(9, 14, 30, 0.7);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            border-bottom: 1px solid rgba(46,224,255,0.25);
-            z-index: 20;
-            backdrop-filter: blur(10px) saturate(140%);
-            box-shadow: inset 0 -20px 40px rgba(0,0,0,0.4);
-        }
-
-        .main-title {
-            font-size: 2.1rem;
-            font-weight: 800;
-            background: linear-gradient(90deg, #7cf9ff, #7c3aed, #00f2fe);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            letter-spacing: 1px;
-            text-shadow: 0 0 18px rgba(46,224,255,0.35);
-            animation: shimmer 4s linear infinite;
-        }
-
-        .sub-title {
-            font-size: 0.95rem;
-            color: #a7b4d6;
-            margin-top: 6px;
-            letter-spacing: 1px;
-        }
-
-        .stage-content {
-            flex: 1;
-            position: relative;
-            padding: 12px 0;
-            overflow: hidden;
-        }
-
-        /* 列表项样式 */
-        .rank-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            padding: 12px;
-            transition: transform 0.5s ease-in-out;
-        }
-
-        .rank-row {
-            display: flex;
-            height: 74px;
-            background: linear-gradient(90deg, rgba(9,14,30,0.8), rgba(13,22,44,0.9));
-            border-radius: 12px;
-            overflow: hidden;
-            position: relative;
-            opacity: 0;
-            transform: translateY(20px);
-            border: 1px solid rgba(46,224,255,0.2);
-            box-shadow: inset 0 0 20px rgba(46,224,255,0.06), 0 0 16px rgba(0,0,0,0.4);
-        }
-
-        .rank-row.show {
-            animation: slideUpFade 0.5s forwards;
-        }
-
-        @keyframes slideUpFade {
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* 中线与名次胶囊 */
-        .divider {
-            position: absolute;
-            left: 50%;
-            top: 0;
-            width: 2px;
-            height: 100%;
-            transform: translateX(-50%);
-            background: linear-gradient(180deg, rgba(46,224,255,0), rgba(46,224,255,0.6), rgba(46,224,255,0));
-            box-shadow: 0 0 16px rgba(46,224,255,0.4);
-            opacity: 0.8;
-        }
-        .rank-badge {
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            padding: 4px 10px;
-            background: rgba(10,16,32,0.7);
-            border: 1px solid rgba(46,224,255,0.35);
-            border-radius: 999px;
-            color: #cfe9ff;
-            font-weight: 700;
-            font-size: 0.78rem;
-            letter-spacing: .4px;
-            box-shadow: 0 0 12px rgba(46,224,255,0.35);
-        }
-
-        /* 左右两侧数据 */
-        .side {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 0 15px;
-            position: relative;
-            text-align: center;
-        }
-
-        .side-left {
-            border-right: 1px solid rgba(255,255,255,0.08);
-            background: linear-gradient(90deg, rgba(0,0,0,0.1) 0%, rgba(0, 242, 254, 0.08) 100%);
-        }
-
-        .side-right {
-            background: linear-gradient(-90deg, rgba(0,0,0,0.1) 0%, rgba(255, 75, 31, 0.08) 100%);
-        }
-
-        .side-win {
-            background: linear-gradient(90deg, rgba(0,242,254,0.14) 0%, rgba(0,242,254,0.22) 100%);
-            box-shadow: inset 0 0 30px rgba(0,242,254,0.25), 0 0 24px rgba(0,242,254,0.35);
-            transform: scale(1.01);
-        }
-        .side-right.side-win {
-            background: linear-gradient(-90deg, rgba(255,75,31,0.14) 0%, rgba(255,75,31,0.24) 100%);
-            box-shadow: inset 0 0 30px rgba(255,75,31,0.25), 0 0 24px rgba(255,75,31,0.35);
-        }
-        .side-lose {
-            opacity: 0.8;
-            filter: saturate(0.9);
-        }
-
-        .item-name {
-            font-size: 1.05rem;
-            font-weight: 700;
-            margin-bottom: 4px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 100%;
-            letter-spacing: 0.3px;
-        }
-
-        .item-value {
-            font-family: 'Impact', sans-serif;
-            font-size: 1.35rem;
-            color: #e6f1ff;
-            text-shadow: 0 0 10px rgba(46,224,255,0.2);
-        }
-
-        /* 进度条/背景条 */
-        .bg-bar {
-            position: absolute;
-            bottom: 0;
-            height: 5px;
-            width: 0%;
-            transition: width 1s ease-out;
-            box-shadow: 0 0 12px currentColor;
-        }
-        .side-left .bg-bar { right: 0; background: #00f2fe; color: #00f2fe; }
-        .side-right .bg-bar { left: 0; background: #ff4b1f; color: #ff4b1f; }
 
         /* 录制状态提示 */
         #recording-status {
@@ -445,16 +264,7 @@
         <div id="recording-status"><span class="blink">●</span> 录制中...</div>
         
         <div id="video-stage">
-            <div class="stage-header">
-                <div class="main-title" id="disp-title">2023年 GDP 大比拼</div>
-                <div class="sub-title" id="disp-subtitle">广东 VS 江苏</div>
-            </div>
-            
-            <div class="stage-content" id="stage-content">
-                <div class="rank-list" id="rank-list">
-                    <!-- 动态生成 -->
-                </div>
-            </div>
+            <canvas id="main-canvas" width="450" height="800"></canvas>
         </div>
     </div>
 </div>
@@ -478,34 +288,38 @@
 
     let rawData = {};
     let compareList = [];
-    let isAnimating = false;
-    let animationTimer = null;
-    let currentRowIndex = 0;
     
-    // 录制相关
-    let mediaRecorder;
+    // Canvas & Animation State
+    const CANVAS_WIDTH = 450;
+    const CANVAS_HEIGHT = 800;
+    let canvas, ctx;
+    let rafId = null;
+    let isAnimating = false;
+    let startTime = 0;
+    
+    // Recording State
+    let mediaRecorder = null;
     let recordedChunks = [];
     let isRecording = false;
-    let isExporting = false;
-    let exportCanvas = null;
-    let exportCtx = null;
-    let exportInterval = null;
-    let exportRAF = null;
-    let exportStartTime = 0;
-    let exportDuration = 0;
-    let exportMode = 'canvas';
+
+    // Timeline Configuration
+    let timeline = {};
 
     // 初始化
     window.onload = () => {
+        canvas = document.getElementById('main-canvas');
+        ctx = canvas.getContext('2d');
+
         document.getElementById('json-input').value = JSON.stringify(defaultData, null, 2);
         parseData(); // 自动解析
         resizeStage(); // 适配屏幕
         window.addEventListener('resize', resizeStage);
+        
+        // 初始绘制
+        drawStatic();
     };
 
     function resizeStage() {
-        if (isExporting) return;
-        // 简单的自适应缩放，保持预览区完整可见
         const container = document.getElementById('preview-area');
         const stage = document.getElementById('video-stage');
         const padding = 40;
@@ -513,10 +327,7 @@
         const availWidth = container.clientWidth - padding;
         const availHeight = container.clientHeight - padding;
         
-        const baseWidth = 450;
-        const baseHeight = 800;
-        
-        const scale = Math.min(availWidth / baseWidth, availHeight / baseHeight);
+        const scale = Math.min(availWidth / CANVAS_WIDTH, availHeight / CANVAS_HEIGHT);
         
         stage.style.transform = `scale(${scale})`;
     }
@@ -558,14 +369,13 @@
     }
 
     function updateTitle() {
-        document.getElementById('disp-title').innerText = document.getElementById('input-title').value;
-        document.getElementById('disp-subtitle').innerText = document.getElementById('input-subtitle').value;
+        // Canvas 模式下，更新标题只需重绘
+        drawStatic();
     }
 
     function updateStyle() {
-        const c1 = document.getElementById('bg-color-1').value;
-        const c2 = document.getElementById('bg-color-2').value;
-        document.getElementById('video-stage').style.background = `linear-gradient(180deg, ${c1} 0%, ${c2} 100%)`;
+        // Canvas 模式下，更新样式只需重绘
+        drawStatic();
     }
 
     function processDataList(key) {
@@ -608,95 +418,93 @@
     }
 
     function resetStage() {
-        document.getElementById('rank-list').innerHTML = '';
-        currentRowIndex = 0;
+        if (rafId) cancelAnimationFrame(rafId);
         isAnimating = false;
-        clearTimeout(animationTimer);
+        isRecording = false;
+        document.getElementById('recording-status').style.display = 'none';
+        drawStatic();
     }
 
-    function startAnimation() {
+    // 绘制静态帧（背景+标题）
+    function drawStatic() {
+        if (isAnimating) return;
+        drawFrame(0, true);
+    }
+
+    // --- 核心动画循环 ---
+    function startAnimation(record = false) {
         if (!prepareCompareData()) return;
-        resetStage();
+        
+        // 停止之前的动画
+        if (rafId) cancelAnimationFrame(rafId);
+        
         isAnimating = true;
+        isRecording = record;
+        startTime = performance.now();
         
+        // 计算时间轴
         const interval = parseFloat(document.getElementById('interval-input').value) * 1000;
+        const totalItems = compareList.length;
         
-        function nextFrame() {
-            if (!isAnimating || currentRowIndex >= compareList.length) {
-                isAnimating = false;
-                const list = document.getElementById('rank-list');
-                list.style.transform = 'translateY(0)';
-                if (isRecording) stopRecording();
-                if (isExporting && exportMode !== 'canvas') finishExport();
-                return;
-            }
+        // 动画参数配置
+        const T_BAR_DELAY = 300;
+        const T_BAR_DURATION = 1000;
+        const T_BOTTOM_HOLD = 1000; // 底部停留
+        const T_SCROLL_BACK = 1500; // 回滚
+        const T_TOP_HOLD = 1500;    // 顶部停留
 
-            const item = compareList[currentRowIndex];
-            addRankRow(item);
-            
-            // 滚动逻辑
-            const container = document.getElementById('stage-content');
-            const list = document.getElementById('rank-list');
-            const rowHeight = 86;
-            
-            // 如果列表高度超过容器，向上滚动
-            const maxVisible = Math.floor(container.clientHeight / rowHeight);
-            if (currentRowIndex >= maxVisible - 1) {
-                // 保持最后一行可见
-                // 简单的 transform 实现
-                const offset = (currentRowIndex - (maxVisible - 2)) * rowHeight;
-                list.style.transform = `translateY(-${offset}px)`;
-            }
+        // Phase 1: 展示内容
+        const t_last_item_start = Math.max(0, totalItems - 1) * interval;
+        const t_content_end = t_last_item_start + T_BAR_DELAY + T_BAR_DURATION;
 
-            currentRowIndex++;
-            animationTimer = setTimeout(nextFrame, interval);
+        // 定义关键时间点
+        timeline = {
+            interval,
+            totalItems,
+            phase1_show: t_content_end,
+            phase2_bottom: t_content_end + T_BOTTOM_HOLD,
+            phase3_scroll: t_content_end + T_BOTTOM_HOLD + T_SCROLL_BACK,
+            phase4_top: t_content_end + T_BOTTOM_HOLD + T_SCROLL_BACK + T_TOP_HOLD,
+            totalDuration: t_content_end + T_BOTTOM_HOLD + T_SCROLL_BACK + T_TOP_HOLD
+        };
+
+        if (isRecording) {
+            setupRecorder();
         }
 
-        nextFrame();
+        loop();
     }
 
-    // --- 导出视频（仅 video-stage 区域） ---
-    async function exportVideo() {
-        if (isExporting) return;
-        if (!prepareCompareData()) return;
-        resetStage();
-        exportMode = 'canvas';
-        isExporting = true;
+    // 导出视频入口
+    function exportVideo() {
+        startAnimation(true);
+    }
 
-        const stage = document.getElementById('video-stage');
+    function setupRecorder() {
         const recBadge = document.getElementById('recording-status');
         recBadge.style.display = 'flex';
-
-        const width = stage.clientWidth;
-        const height = stage.clientHeight;
-        const dpr = window.devicePixelRatio || 1;
-        exportCanvas = document.createElement('canvas');
-        exportCanvas.width = width * dpr;
-        exportCanvas.height = height * dpr;
-        exportCtx = exportCanvas.getContext('2d');
-        exportCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-        let mimeType;
-        if (MediaRecorder.isTypeSupported('video/mp4')) {
-            mimeType = 'video/mp4';
-        } else if (MediaRecorder.isTypeSupported('video/mp4;codecs=avc1')) {
+        
+        // 确保捕获流帧率足够
+        const stream = canvas.captureStream(60);
+        
+        let mimeType = 'video/webm';
+        if (MediaRecorder.isTypeSupported('video/mp4;codecs=avc1')) {
             mimeType = 'video/mp4;codecs=avc1';
         } else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) {
             mimeType = 'video/webm;codecs=vp9';
-        } else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8')) {
-            mimeType = 'video/webm;codecs=vp8';
-        } else {
-            mimeType = 'video/webm';
         }
 
-        const stream = exportCanvas.captureStream(60);
+        console.log(`[Export] Start recording. MIME: ${mimeType}`);
+
         mediaRecorder = new MediaRecorder(stream, {
             mimeType,
-            videoBitsPerSecond: 8000000
+            videoBitsPerSecond: 8000000 // 8Mbps
         });
+        
         recordedChunks = [];
         mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
         mediaRecorder.onstop = () => {
+            console.log(`[Export] Recorder stopped. Chunks: ${recordedChunks.length}`);
             const blob = new Blob(recordedChunks, { type: mimeType });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -707,133 +515,84 @@
             document.body.appendChild(a);
             a.click();
             URL.revokeObjectURL(url);
-            isExporting = false;
-            recBadge.style.display = 'none';
-            if (exportRAF) { cancelAnimationFrame(exportRAF); exportRAF = null; }
-            exportCanvas = null; exportCtx = null;
-            resizeStage();
+            
+            cleanupRecording();
         };
-        mediaRecorder.start(100);
-
-        const interval = parseFloat(document.getElementById('interval-input').value) * 1000;
-        const rowAnim = 500;
-        const barDelay = 300;
-        const barDuration = 1000;
-        const postScroll = 500;
-        const tailHold = 1200;
-        const lastRowTime = Math.max(0, compareList.length - 1) * interval;
-        const lastBarEnd = lastRowTime + barDelay + barDuration;
-        const postScrollStart = Math.max(compareList.length * interval, lastBarEnd);
-        exportDuration = postScrollStart + postScroll + tailHold;
-        exportStartTime = performance.now();
-
-        const drawLoop = () => {
-            if (!isExporting || mediaRecorder.state === 'inactive') return;
-            const now = performance.now();
-            const elapsed = now - exportStartTime;
-            renderExportFrame(exportCtx, width, height, elapsed, interval);
-            if (elapsed >= exportDuration) {
-                finishExport();
-                return;
-            }
-            exportRAF = requestAnimationFrame(drawLoop);
-        };
-        drawLoop();
-
-        if (!isAnimating) startAnimation();
+        
+        mediaRecorder.start();
     }
 
-    function finishExport() {
-        const recBadge = document.getElementById('recording-status');
-        if (isExporting && mediaRecorder && mediaRecorder.state === 'recording') {
+    function loop() {
+        if (!isAnimating) return;
+
+        const now = performance.now();
+        let elapsed = now - startTime;
+
+        // 检查是否结束
+        if (elapsed >= timeline.totalDuration) {
+            elapsed = timeline.totalDuration;
+            drawFrame(elapsed); // 渲染最后一帧
+            stopAnimation();
+            return;
+        }
+
+        drawFrame(elapsed);
+        rafId = requestAnimationFrame(loop);
+    }
+
+    function stopAnimation() {
+        isAnimating = false;
+        if (rafId) cancelAnimationFrame(rafId);
+        
+        if (isRecording && mediaRecorder && mediaRecorder.state !== 'inactive') {
             mediaRecorder.stop();
         } else {
-            isExporting = false;
-            recBadge.style.display = 'none';
-            if (exportRAF) { cancelAnimationFrame(exportRAF); exportRAF = null; }
-            exportCanvas = null; exportCtx = null;
-            resizeStage();
+            // 如果不是录制模式，直接结束
+            if (isRecording) cleanupRecording();
         }
     }
 
-    function addRankRow(data) {
-        const container = document.getElementById('rank-list');
-        const row = document.createElement('div');
-        row.className = 'rank-row';
-        
-        // 导出动画：记录出现时间用于 Canvas 动画
-        const appearIndex = currentRowIndex;
-        if (!window.rowAppearTimes) window.rowAppearTimes = {};
-        window.rowAppearTimes[appearIndex] = performance.now();
-
-        // 计算相对比例（基于两者中较大值，或者全局最大值？这里用两者最大值）
-        const maxVal = Math.max(data.left.value, data.right.value) || 1;
-        const leftPct = (data.left.value / maxVal) * 100;
-        const rightPct = (data.right.value / maxVal) * 100;
-
-        const leftWin = '';
-        const rightWin = '';
-        const leftSideClass = data.left.value > data.right.value ? 'side-win' : (data.left.value < data.right.value ? 'side-lose' : '');
-        const rightSideClass = data.right.value > data.left.value ? 'side-win' : (data.right.value < data.left.value ? 'side-lose' : '');
-
-        row.innerHTML = `
-            <div class="divider"></div>
-            <div class="side side-left ${leftSideClass}">
-                <div class="item-name ${leftWin}">${data.left.name}</div>
-                <div class="item-value ${leftWin}">${data.left.value.toLocaleString()}</div>
-                <div class="bg-bar" style="width:0%" data-width="${leftPct}%"></div>
-            </div>
-            <div class="rank-badge">第${data.rank}名</div>
-            <div class="side side-right ${rightSideClass}">
-                <div class="item-name ${rightWin}">${data.right.name}</div>
-                <div class="item-value ${rightWin}">${data.right.value.toLocaleString()}</div>
-                <div class="bg-bar" style="width:0%" data-width="${rightPct}%"></div>
-            </div>
-        `;
-        
-        container.appendChild(row);
-        
-        // 触发进场动画
-        requestAnimationFrame(() => {
-            row.classList.add('show');
-            // 延迟触发进度条动画
-            setTimeout(() => {
-                const bars = row.querySelectorAll('.bg-bar');
-                bars.forEach(bar => bar.style.width = bar.dataset.width);
-            }, 300);
-        });
+    function cleanupRecording() {
+        isRecording = false;
+        document.getElementById('recording-status').style.display = 'none';
+        // 动画结束后，可以停留在最后一帧，或者重置
+        // 这里选择停留在最后一帧，直到用户点击重置
     }
 
-    // Canvas 导出帧渲染（尽量复刻 DOM 风格）
-    function renderExportFrame(ctx, width, height, elapsed, interval) {
-        // 背景
+    // --- 统一渲染函数 ---
+    function drawFrame(elapsed, staticMode = false) {
+        // 清空画布
+        ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+        // 1. 背景绘制
         const c1 = document.getElementById('bg-color-1').value;
         const c2 = document.getElementById('bg-color-2').value;
-        const bg = ctx.createLinearGradient(0, 0, 0, height);
+        const bg = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
         bg.addColorStop(0, c1);
         bg.addColorStop(1, c2);
         ctx.fillStyle = bg;
-        ctx.fillRect(0, 0, width, height);
+        ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-        // 圆角描边
+        // 边框
         ctx.strokeStyle = 'rgba(46,224,255,0.25)';
         ctx.lineWidth = 1;
-        ctx.strokeRect(0.5, 0.5, width - 1, height - 1);
+        ctx.strokeRect(0.5, 0.5, CANVAS_WIDTH - 1, CANVAS_HEIGHT - 1);
 
-        // 头部
+        // 2. 头部绘制
         const headerH = 110;
         ctx.fillStyle = 'rgba(9,14,30,0.7)';
-        ctx.fillRect(0, 0, width, headerH);
+        ctx.fillRect(0, 0, CANVAS_WIDTH, headerH);
         ctx.strokeStyle = 'rgba(46,224,255,0.25)';
         ctx.beginPath();
         ctx.moveTo(0, headerH + 0.5);
-        ctx.lineTo(width, headerH + 0.5);
+        ctx.lineTo(CANVAS_WIDTH, headerH + 0.5);
         ctx.stroke();
 
         // 标题
-        const title = document.getElementById('disp-title').innerText;
-        const subtitle = document.getElementById('disp-subtitle').innerText;
-        const titleGrad = ctx.createLinearGradient(0, 0, width, 0);
+        const title = document.getElementById('input-title').value;
+        const subtitle = document.getElementById('input-subtitle').value;
+        
+        const titleGrad = ctx.createLinearGradient(0, 0, CANVAS_WIDTH, 0);
         titleGrad.addColorStop(0, '#7cf9ff');
         titleGrad.addColorStop(0.5, '#7c3aed');
         titleGrad.addColorStop(1, '#00f2fe');
@@ -841,138 +600,171 @@
         ctx.font = '800 32px Segoe UI, Roboto, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(title, width / 2, 42);
+        ctx.fillText(title, CANVAS_WIDTH / 2, 42);
 
         ctx.fillStyle = '#a7b4d6';
         ctx.font = '16px Segoe UI, Roboto, sans-serif';
-        ctx.fillText(subtitle, width / 2, 78);
+        ctx.fillText(subtitle, CANVAS_WIDTH / 2, 78);
 
-        // 列表区域
+        // 如果是静态模式（仅背景），直接返回
+        if (staticMode) return;
+
+        // 3. 列表内容绘制
         const listTop = headerH + 12;
         const rowHeight = 74;
         const gap = 12;
         const contentPadding = 12;
-        const maxVisible = Math.floor((height - listTop - contentPadding) / (rowHeight + gap));
-
-        const totalRowsShown = Math.min(compareList.length, Math.floor(elapsed / interval) + 1);
-        const naturalOverflow = Math.max(0, totalRowsShown - maxVisible);
         const rowStep = rowHeight + gap;
-        const rowAnim = 500;
-        const barDelay = 300;
-        const barDuration = 1000;
-        const lastRowTime = Math.max(0, compareList.length - 1) * interval;
-        const lastBarEnd = lastRowTime + barDelay + barDuration;
-        const postScrollStart = Math.max(compareList.length * interval, lastBarEnd);
-        const postScrollDuration = 500;
-        let currentScroll = -naturalOverflow * rowStep;
-        if (elapsed >= postScrollStart) {
-            const t = Math.max(0, Math.min((elapsed - postScrollStart) / postScrollDuration, 1));
-            currentScroll = currentScroll * (1 - t);
+        
+        // 计算可视区域能容纳多少行
+        const maxVisible = Math.floor((CANVAS_HEIGHT - listTop - contentPadding) / rowStep);
+        
+        // --- 滚动位置计算 ---
+        let currentScroll = 0;
+        let rowsToDraw = 0;
+
+        const { interval, totalItems, phase1_show, phase2_bottom, phase3_scroll } = timeline;
+
+        if (elapsed < phase1_show) {
+            // [阶段1: 展示]
+            rowsToDraw = Math.min(totalItems, Math.floor(elapsed / interval) + 1);
+            const overflowCount = Math.max(0, rowsToDraw - maxVisible);
+            currentScroll = -overflowCount * rowStep;
+            
+        } else if (elapsed < phase2_bottom) {
+            // [阶段2: 底部停留]
+            rowsToDraw = totalItems;
+            const overflowCount = Math.max(0, totalItems - maxVisible);
+            currentScroll = -overflowCount * rowStep;
+            
+        } else if (elapsed < phase3_scroll) {
+            // [阶段3: 回滚顶部]
+            rowsToDraw = totalItems;
+            const maxScroll = -Math.max(0, totalItems - maxVisible) * rowStep;
+            
+            // 计算回滚进度 (0 -> 1)
+            const t = (elapsed - phase2_bottom) / (phase3_scroll - phase2_bottom);
+            const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; // EaseInOutQuad
+            
+            // 从 maxScroll 变回到 0
+            currentScroll = maxScroll * (1 - ease);
+            
+        } else {
+            // [阶段4: 顶部停留]
+            rowsToDraw = totalItems;
+            currentScroll = 0;
         }
 
-        for (let i = 0; i < totalRowsShown; i++) {
+        // 绘制每一行
+        for (let i = 0; i < rowsToDraw; i++) {
             const item = compareList[i];
             const yBase = listTop + i * rowStep + currentScroll;
-            if (yBase > height || yBase + rowHeight < listTop - rowStep) continue;
+            
+            // 视口剔除优化
+            if (yBase > CANVAS_HEIGHT || yBase + rowHeight < listTop) continue;
 
-            // 进场动画
-            let appearT = window.rowAppearTimes && window.rowAppearTimes[i] ? window.rowAppearTimes[i] : exportStartTime;
-            let p = Math.min((elapsed - (i * interval)) / 500, 1);
-            p = Math.max(0, p);
-            const ease = p < 1 ? (1 - Math.pow(1 - p, 3)) : 1;
-
-            const y = yBase + (1 - ease) * 20;
-            const alpha = ease;
-
-            ctx.globalAlpha = alpha;
-
-            // 行背景
-            const rowGrad = ctx.createLinearGradient(0, y, width, y);
-            rowGrad.addColorStop(0, 'rgba(9,14,30,0.8)');
-            rowGrad.addColorStop(1, 'rgba(13,22,44,0.9)');
-            ctx.fillStyle = rowGrad;
-            ctx.strokeStyle = 'rgba(46,224,255,0.2)';
-            ctx.lineWidth = 1;
-            ctx.fillRect(contentPadding, y, width - contentPadding * 2, rowHeight);
-            ctx.strokeRect(contentPadding + 0.5, y + 0.5, width - contentPadding * 2 - 1, rowHeight - 1);
-
-            // 行内中线（与 DOM 一致，仅在该行内绘制）
-            ctx.fillStyle = 'rgba(46,224,255,0.35)';
-            ctx.fillRect(width / 2 - 1, y, 2, rowHeight);
-
-            // 两侧区域
-            const leftRect = [contentPadding, y, (width / 2) - contentPadding, rowHeight];
-            const rightRect = [(width / 2), y, (width / 2) - contentPadding, rowHeight];
-
-            const lVal = item.left.value || 0;
-            const rVal = item.right.value || 0;
-            const maxVal = Math.max(lVal, rVal) || 1;
-            const lPct = lVal / maxVal;
-            const rPct = rVal / maxVal;
-
-            // 胜负背景微光
-            if (lVal > rVal) {
-                ctx.fillStyle = 'rgba(0,242,254,0.18)';
-                ctx.fillRect(leftRect[0], leftRect[1], leftRect[2], leftRect[3]);
-            } else if (rVal > lVal) {
-                ctx.fillStyle = 'rgba(255,75,31,0.18)';
-                ctx.fillRect(rightRect[0], rightRect[1], rightRect[2], rightRect[3]);
-            }
-
-            // 文本
-            ctx.fillStyle = '#e6f1ff';
-            ctx.font = '700 16px Segoe UI, Roboto, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(item.left.name, leftRect[0] + leftRect[2] / 2, y + 22);
-            ctx.fillText(item.right.name, rightRect[0] + rightRect[2] / 2, y + 22);
-
-            ctx.font = '28px Impact, sans-serif';
-            ctx.fillText((lVal || 0).toLocaleString(), leftRect[0] + leftRect[2] / 2, y + 50);
-            ctx.fillText((rVal || 0).toLocaleString(), rightRect[0] + rightRect[2] / 2, y + 50);
-
-            // 进度条动画
-            const barStart = 300;
-            const barAnim = Math.max(0, Math.min((elapsed - (i * interval) - barStart) / 1000, 1));
-            const barEase = barAnim < 1 ? (1 - Math.pow(1 - barAnim, 2)) : 1;
-
-            // 左条
-            ctx.fillStyle = '#00f2fe';
-            ctx.fillRect(leftRect[0] + leftRect[2] * (1 - lPct * barEase), y + rowHeight - 6, leftRect[2] * lPct * barEase, 5);
-            // 右条
-            ctx.fillStyle = '#ff4b1f';
-            ctx.fillRect(rightRect[0], y + rowHeight - 6, rightRect[2] * rPct * barEase, 5);
-
-            // 排名胶囊
-            const badgeW = 68;
-            const badgeH = 24;
-            const badgeX = width / 2 - badgeW / 2;
-            const badgeY = y + rowHeight / 2 - badgeH / 2;
-            ctx.fillStyle = 'rgba(10,16,32,0.7)';
-            ctx.strokeStyle = 'rgba(46,224,255,0.35)';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            const r = badgeH / 2;
-            ctx.moveTo(badgeX + r, badgeY);
-            ctx.arc(badgeX + badgeW - r, badgeY + r, r, -Math.PI / 2, Math.PI / 2);
-            ctx.arc(badgeX + r, badgeY + r, r, Math.PI / 2, -Math.PI / 2);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-            ctx.fillStyle = '#cfe9ff';
-            ctx.font = '700 12px Segoe UI, Roboto, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(`第${item.rank}名`, width / 2, y + rowHeight / 2);
-
-            ctx.globalAlpha = 1;
+            drawRow(yBase, rowHeight, contentPadding, item, i, elapsed, interval);
         }
     }
 
-    function stopRecording() {
-        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-            mediaRecorder.stop();
+    function drawRow(y, h, padding, item, index, elapsed, interval) {
+        // 进场动画计算
+        const startTime = index * interval;
+        let p = Math.min((elapsed - startTime) / 500, 1);
+        p = Math.max(0, p);
+        const ease = p < 1 ? (1 - Math.pow(1 - p, 3)) : 1; // EaseOutCubic
+
+        const currentY = y + (1 - ease) * 20; // 上浮
+        const alpha = ease;
+
+        ctx.globalAlpha = alpha;
+
+        // 行背景
+        const rowGrad = ctx.createLinearGradient(0, currentY, CANVAS_WIDTH, currentY);
+        rowGrad.addColorStop(0, 'rgba(9,14,30,0.8)');
+        rowGrad.addColorStop(1, 'rgba(13,22,44,0.9)');
+        ctx.fillStyle = rowGrad;
+        ctx.strokeStyle = 'rgba(46,224,255,0.2)';
+        ctx.lineWidth = 1;
+        ctx.fillRect(padding, currentY, CANVAS_WIDTH - padding * 2, h);
+        ctx.strokeRect(padding + 0.5, currentY + 0.5, CANVAS_WIDTH - padding * 2 - 1, h - 1);
+
+        // 中线
+        ctx.fillStyle = 'rgba(46,224,255,0.35)';
+        ctx.fillRect(CANVAS_WIDTH / 2 - 1, currentY, 2, h);
+
+        // 内容计算
+        const halfW = CANVAS_WIDTH / 2;
+        const leftRect = [padding, currentY, halfW - padding, h];
+        const rightRect = [halfW, currentY, halfW - padding, h];
+
+        const lVal = item.left.value || 0;
+        const rVal = item.right.value || 0;
+        const maxVal = Math.max(lVal, rVal) || 1;
+        const lPct = lVal / maxVal;
+        const rPct = rVal / maxVal;
+
+        // 胜负背景
+        if (lVal > rVal) {
+            ctx.fillStyle = 'rgba(0,242,254,0.18)';
+            ctx.fillRect(leftRect[0], leftRect[1], leftRect[2], leftRect[3]);
+        } else if (rVal > lVal) {
+            ctx.fillStyle = 'rgba(255,75,31,0.18)';
+            ctx.fillRect(rightRect[0], rightRect[1], rightRect[2], rightRect[3]);
         }
+
+        // 文本
+        ctx.fillStyle = '#e6f1ff';
+        ctx.font = '700 16px Segoe UI, Roboto, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(item.left.name, leftRect[0] + leftRect[2] / 2, currentY + 22);
+        ctx.fillText(item.right.name, rightRect[0] + rightRect[2] / 2, currentY + 22);
+
+        ctx.font = '28px Impact, sans-serif';
+        ctx.fillText(lVal.toLocaleString(), leftRect[0] + leftRect[2] / 2, currentY + 50);
+        ctx.fillText(rVal.toLocaleString(), rightRect[0] + rightRect[2] / 2, currentY + 50);
+
+        // 进度条动画 (在行出现后 300ms 开始)
+        const barStart = startTime + 300;
+        const barAnim = Math.max(0, Math.min((elapsed - barStart) / 1000, 1));
+        const barEase = barAnim < 1 ? (1 - Math.pow(1 - barAnim, 2)) : 1;
+
+        // 左条
+        ctx.fillStyle = '#00f2fe';
+        const lBarW = leftRect[2] * lPct * barEase;
+        ctx.fillRect(leftRect[0] + leftRect[2] * (1 - lPct * barEase), currentY + h - 6, lBarW, 5);
+
+        // 右条
+        ctx.fillStyle = '#ff4b1f';
+        const rBarW = rightRect[2] * rPct * barEase;
+        ctx.fillRect(rightRect[0], currentY + h - 6, rBarW, 5);
+
+        // 排名徽章
+        const badgeW = 68;
+        const badgeH = 24;
+        const badgeX = CANVAS_WIDTH / 2 - badgeW / 2;
+        const badgeY = currentY + h / 2 - badgeH / 2;
+        
+        ctx.fillStyle = 'rgba(10,16,32,0.7)';
+        ctx.strokeStyle = 'rgba(46,224,255,0.35)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        const r = badgeH / 2;
+        ctx.moveTo(badgeX + r, badgeY);
+        ctx.arc(badgeX + badgeW - r, badgeY + r, r, -Math.PI / 2, Math.PI / 2);
+        ctx.arc(badgeX + r, badgeY + r, r, Math.PI / 2, -Math.PI / 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#cfe9ff';
+        ctx.font = '700 12px Segoe UI, Roboto, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`第${item.rank}名`, CANVAS_WIDTH / 2, currentY + h / 2);
+
+        ctx.globalAlpha = 1;
     }
 
 </script>
