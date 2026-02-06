@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>城市数据对比视频生成器</title>
+    <style>
+        :root {
+            --bg-color: #0b0f1f;
+            --panel-bg: rgba(14, 18, 32, 0.88);
+            --text-color: #e6f1ff;
+            --accent-color: #2ee0ff;
+            --accent-2: #7c3aed;
+            --border-color: rgba(46, 224, 255, 0.2);
+            --preview-width: 450px;
+            --preview-height: 800px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: radial-gradient(1200px 800px at 20% 10%, rgba(46,224,255,0.12), transparent 60%),
+                        radial-gradient(900px 700px at 90% 20%, rgba(124,58,237,0.18), transparent 55%),
+                        linear-gradient(180deg, #090c1a 0%, #0b1024 100%);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* 布局容器 */
+        .layout {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 左侧配置面板 */
+        .config-panel {
+            width: 420px;
+            background-color: var(--panel-bg);
+            border-right: 1px solid var(--border-color);
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            overflow-y: auto;
+            z-index: 10;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5), inset 0 0 30px rgba(46,224,255,0.06);
+            backdrop-filter: blur(16px) saturate(150%);
+        }
+
+        .config-group {
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding-bottom: 16px;
+        }
+
+        .config-group h3 {
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+            color: #9fb3d9;
+            text-transform: uppercase;
+            letter-spacing: 1.6px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+            color: #b9c8e6;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(8, 12, 24, 0.8);
+            border: 1px solid rgba(46,224,255,0.25);
+            color: #e6f1ff;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-family: inherit;
+            box-shadow: inset 0 0 12px rgba(46,224,255,0.05);
+        }
+
+        textarea {
+            height: 140px;
+            resize: vertical;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 0.82rem;
+        }
+
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px 12px;
+            background: linear-gradient(135deg, rgba(46,224,255,0.9), rgba(124,58,237,0.9));
+            border: 1px solid rgba(46,224,255,0.35);
+            color: #f2f7ff;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            box-shadow: 0 0 16px rgba(46,224,255,0.25);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        button:hover { transform: translateY(-1px); box-shadow: 0 0 22px rgba(46,224,255,0.4); }
+        button:disabled { background: #555; cursor: not-allowed; }
+        
+        .btn-danger { background: linear-gradient(135deg, #ff4d6d, #ff1f3d); }
+        .btn-success { background: linear-gradient(135deg, #12d6a7, #00b3ff); }
+
+        /* 右侧预览区域 */
+        .preview-area {
+            flex: 1;
+            background-color: #05070f;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            background-image:
+                radial-gradient(600px 600px at 20% 30%, rgba(46,224,255,0.08), transparent 60%),
+                radial-gradient(500px 500px at 80% 70%, rgba(124,58,237,0.12), transparent 55%),
+                linear-gradient(135deg, rgba(255,255,255,0.04) 25%, transparent 25%),
+                linear-gradient(-135deg, rgba(255,255,255,0.04) 25%, transparent 25%);
+            background-size: auto, auto, 26px 26px, 26px 26px;
+            background-position: 0 0, 0 0, 0 0, 13px 13px;
+            overflow: hidden;
+        }
+
+        /* 9:16 视频容器 */
+        #video-stage {
+            width: var(--preview-width);
+            height: var(--preview-height);
+            background: linear-gradient(180deg, #0b1328 0%, #0c1936 100%);
+            position: relative;
+            box-shadow: 0 0 80px rgba(0,0,0,0.6), 0 0 40px rgba(46,224,255,0.15);
+            overflow: hidden;
+            transform-origin: center center;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(46,224,255,0.25);
+            border-radius: 28px;
+        }
+
+        #video-stage::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+            background-size: 32px 32px;
+            opacity: 0.6;
+            pointer-events: none;
+            border-radius: inherit;
+        }
+
+        #video-stage::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, transparent 0%, rgba(46,224,255,0.05) 50%, transparent 100%);
+            opacity: 0.35;
+            animation: scan 6s linear infinite;
+            pointer-events: none;
+            border-radius: inherit;
+        }
+
+        /* 视频内容样式 */
+        .stage-header {
+            height: 110px;
+            background: rgba(9, 14, 30, 0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 1px solid rgba(46,224,255,0.25);
+            z-index: 20;
+            backdrop-filter: blur(10px) saturate(140%);
+            box-shadow: inset 0 -20px 40px rgba(0,0,0,0.4);
+        }
+
+        .main-title {
+            font-size: 2.1rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, #7cf9ff, #7c3aed, #00f2fe);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: 1px;
+            text-shadow: 0 0 18px rgba(46,224,255,0.35);
+            animation: shimmer 4s linear infinite;
+        }
+
+        .sub-title {
+            font-size: 0.95rem;
+            color: #a7b4d6;
+            margin-top: 6px;
+            letter-spacing: 1px;
+        }
+
+        .stage-content {
+            flex: 1;
+            position: relative;
+            padding: 12px 0;
+            overflow: hidden;
+        }
+
+        /* 列表项样式 */
+        .rank-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 12px;
+            transition: transform 0.5s ease-in-out;
+        }
+
+        .rank-row {
+            display: flex;
+            height: 74px;
+            background: linear-gradient(90deg, rgba(9,14,30,0.8), rgba(13,22,44,0.9));
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            opacity: 0;
+            transform: translateY(20px);
+            border: 1px solid rgba(46,224,255,0.2);
+            box-shadow: inset 0 0 20px rgba(46,224,255,0.06), 0 0 16px rgba(0,0,0,0.4);
+        }
+
+        .rank-row.show {
+            animation: slideUpFade 0.5s forwards;
+        }
+
+        @keyframes slideUpFade {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 中线与名次胶囊 */
+        .divider {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            width: 2px;
+            height: 100%;
+            transform: translateX(-50%);
+            background: linear-gradient(180deg, rgba(46,224,255,0), rgba(46,224,255,0.6), rgba(46,224,255,0));
+            box-shadow: 0 0 16px rgba(46,224,255,0.4);
+            opacity: 0.8;
+        }
+        .rank-badge {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            padding: 4px 10px;
+            background: rgba(10,16,32,0.7);
+            border: 1px solid rgba(46,224,255,0.35);
+            border-radius: 999px;
+            color: #cfe9ff;
+            font-weight: 700;
+            font-size: 0.78rem;
+            letter-spacing: .4px;
+            box-shadow: 0 0 12px rgba(46,224,255,0.35);
+        }
+
+        /* 左右两侧数据 */
+        .side {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 0 15px;
+            position: relative;
+            text-align: center;
+        }
+
+        .side-left {
+            border-right: 1px solid rgba(255,255,255,0.08);
+            background: linear-gradient(90deg, rgba(0,0,0,0.1) 0%, rgba(0, 242, 254, 0.08) 100%);
+        }
+
+        .side-right {
+            background: linear-gradient(-90deg, rgba(0,0,0,0.1) 0%, rgba(255, 75, 31, 0.08) 100%);
+        }
+
+        .side-win {
+            background: linear-gradient(90deg, rgba(0,242,254,0.14) 0%, rgba(0,242,254,0.22) 100%);
+            box-shadow: inset 0 0 30px rgba(0,242,254,0.25), 0 0 24px rgba(0,242,254,0.35);
+            transform: scale(1.01);
+        }
+        .side-right.side-win {
+            background: linear-gradient(-90deg, rgba(255,75,31,0.14) 0%, rgba(255,75,31,0.24) 100%);
+            box-shadow: inset 0 0 30px rgba(255,75,31,0.25), 0 0 24px rgba(255,75,31,0.35);
+        }
+        .side-lose {
+            opacity: 0.8;
+            filter: saturate(0.9);
+        }
+
+        .item-name {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            letter-spacing: 0.3px;
+        }
+
+        .item-value {
+            font-family: 'Impact', sans-serif;
+            font-size: 1.35rem;
+            color: #e6f1ff;
+            text-shadow: 0 0 10px rgba(46,224,255,0.2);
+        }
+
+        /* 进度条/背景条 */
+        .bg-bar {
+            position: absolute;
+            bottom: 0;
+            height: 5px;
+            width: 0%;
+            transition: width 1s ease-out;
+            box-shadow: 0 0 12px currentColor;
+        }
+        .side-left .bg-bar { right: 0; background: #00f2fe; color: #00f2fe; }
+        .side-right .bg-bar { left: 0; background: #ff4b1f; color: #ff4b1f; }
+
+        /* 录制状态提示 */
+        #recording-status {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 70, 94, 0.9);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 999px;
+            display: none;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            z-index: 1000;
+            box-shadow: 0 0 20px rgba(255,70,94,0.5);
+            letter-spacing: 0.5px;
+        }
+        .blink { animation: blinker 1.5s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0.2; } }
+
+        @keyframes shimmer {
+            0% { filter: drop-shadow(0 0 6px rgba(46,224,255,0.2)); }
+            50% { filter: drop-shadow(0 0 16px rgba(124,58,237,0.35)); }
+            100% { filter: drop-shadow(0 0 6px rgba(46,224,255,0.2)); }
+        }
+
+        @keyframes scan {
+            0% { transform: translateY(-40%); }
+            100% { transform: translateY(40%); }
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="layout">
+    <!-- 左侧配置 -->
+    <div class="config-panel">
+        <h2 style="margin-bottom:20px; color:#e6f1ff; letter-spacing:1px;">🛠 配置面板</h2>
+
+        <div class="config-group">
+            <h3>1. 数据录入</h3>
+            <label>JSON 数据:</label>
+            <textarea id="json-input" placeholder='{"省A": {"城1": 100...}, "省B": {...}}'></textarea>
+            <button onclick="parseData()">解析数据</button>
+        </div>
+
+        <div class="config-group" id="data-select-group" style="display:none;">
+            <h3>2. 对比设置</h3>
+            <label>左侧列表 (Left):</label>
+            <select id="select-left"></select>
+            <label>右侧列表 (Right):</label>
+            <select id="select-right"></select>
+        </div>
+
+        <div class="config-group">
+            <h3>3. 样式 & 标题</h3>
+            <label>主标题:</label>
+            <input type="text" id="input-title" value="2023年 GDP 大比拼" oninput="updateTitle()">
+            <label>副标题:</label>
+            <input type="text" id="input-subtitle" value="广东 VS 江苏" oninput="updateTitle()">
+            
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div>
+                    <label>背景色 (上):</label>
+                    <input type="color" id="bg-color-1" value="#1e1e2f" style="width:100%; height:30px;" onchange="updateStyle()">
+                </div>
+                <div>
+                    <label>背景色 (下):</label>
+                    <input type="color" id="bg-color-2" value="#2a2a40" style="width:100%; height:30px;" onchange="updateStyle()">
+                </div>
+            </div>
+        </div>
+
+        <div class="config-group">
+            <h3>4. 动画控制</h3>
+            <label>每行间隔 (秒):</label>
+            <input type="number" id="interval-input" value="1.5" step="0.1" min="0.5">
+            <label>自动滚动:</label>
+            <select id="scroll-mode">
+                <option value="auto">智能滚动 (保持最新在底部)</option>
+                <option value="page">翻页模式 (暂未实现)</option>
+            </select>
+        </div>
+
+        <div class="config-group">
+            <h3>5. 导出/操作</h3>
+            <div class="btn-group">
+                <button class="btn-success" id="btn-play" onclick="startAnimation()">▶ 开始播放</button>
+                <button class="btn-danger" id="btn-export" onclick="exportVideo()">� 导出视频</button>
+            </div>
+            <button onclick="resetStage()" style="margin-top:10px; background:#666;">↺ 重置舞台</button>
+            <p style="font-size:0.8rem; color:#888; margin-top:5px;">
+                * 导出仅包含右侧 9:16 预览区域的视频内容（适配自媒体）。
+            </p>
+        </div>
+    </div>
+
+    <!-- 右侧预览 -->
+    <div class="preview-area" id="preview-area">
+        <div id="recording-status"><span class="blink">●</span> 录制中...</div>
+        
+        <div id="video-stage">
+            <div class="stage-header">
+                <div class="main-title" id="disp-title">2023年 GDP 大比拼</div>
+                <div class="sub-title" id="disp-subtitle">广东 VS 江苏</div>
+            </div>
+            
+            <div class="stage-content" id="stage-content">
+                <div class="rank-list" id="rank-list">
+                    <!-- 动态生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 默认数据
+    const defaultData = { 
+       "广东省": { 
+         "深圳市": 38731.8, "广州市": 32039.46, "佛山市": 13157.35, "东莞市": 12760.2, 
+         "惠州市": 6363.66, "珠海市": 4573.1, "江门市": 4293.91, "中山市": 4260.56, 
+         "茂名市": 4106.4, "湛江市": 3952.94, "汕头市": 3023.83, "肇庆市": 2974.84, 
+         "揭阳市": 2553.75, "清远市": 2317.47
+       }, 
+       "江苏省": { 
+         "苏州市": 27695.1, "南京市": 19428.78, "无锡市": 16773.94, "南通市": 12801.5, 
+         "常州市": 11158.7, "徐州市": 9957.22, "盐城市": 8045.3, "扬州市": 8056.75, 
+         "泰州市": 7255.27, "镇江市": 5736.78, "淮安市": 5630.11, "连云港市": 4830.94, 
+         "宿迁市": 5026.6 
+       } 
+    };
+
+    let rawData = {};
+    let compareList = [];
+    let isAnimating = false;
+    let animationTimer = null;
+    let currentRowIndex = 0;
+    
+    // 录制相关
+    let mediaRecorder;
+    let recordedChunks = [];
+    let isRecording = false;
+    let isExporting = false;
+    let exportCanvas = null;
+    let exportCtx = null;
+    let exportInterval = null;
+    let exportRAF = null;
+    let exportStartTime = 0;
+    let exportDuration = 0;
+    let exportMode = 'canvas';
+
+    // 初始化
+    window.onload = () => {
+        document.getElementById('json-input').value = JSON.stringify(defaultData, null, 2);
+        parseData(); // 自动解析
+        resizeStage(); // 适配屏幕
+        window.addEventListener('resize', resizeStage);
+    };
+
+    function resizeStage() {
+        if (isExporting) return;
+        // 简单的自适应缩放，保持预览区完整可见
+        const container = document.getElementById('preview-area');
+        const stage = document.getElementById('video-stage');
+        const padding = 40;
+        
+        const availWidth = container.clientWidth - padding;
+        const availHeight = container.clientHeight - padding;
+        
+        const baseWidth = 450;
+        const baseHeight = 800;
+        
+        const scale = Math.min(availWidth / baseWidth, availHeight / baseHeight);
+        
+        stage.style.transform = `scale(${scale})`;
+    }
+
+    function parseData() {
+        try {
+            const input = document.getElementById('json-input').value;
+            rawData = JSON.parse(input);
+            const keys = Object.keys(rawData);
+            
+            if (keys.length < 2) {
+                alert("数据至少需要两个分类");
+                return;
+            }
+
+            const selLeft = document.getElementById('select-left');
+            const selRight = document.getElementById('select-right');
+            selLeft.innerHTML = '';
+            selRight.innerHTML = '';
+
+            keys.forEach(k => {
+                selLeft.add(new Option(k, k));
+                selRight.add(new Option(k, k));
+            });
+            
+            // 默认选前两个
+            selLeft.selectedIndex = 0;
+            selRight.selectedIndex = 1;
+            
+            document.getElementById('data-select-group').style.display = 'block';
+            
+            // 自动更新副标题
+            document.getElementById('input-subtitle').value = `${keys[0]} VS ${keys[1]}`;
+            updateTitle();
+
+        } catch (e) {
+            alert("JSON 错误: " + e.message);
+        }
+    }
+
+    function updateTitle() {
+        document.getElementById('disp-title').innerText = document.getElementById('input-title').value;
+        document.getElementById('disp-subtitle').innerText = document.getElementById('input-subtitle').value;
+    }
+
+    function updateStyle() {
+        const c1 = document.getElementById('bg-color-1').value;
+        const c2 = document.getElementById('bg-color-2').value;
+        document.getElementById('video-stage').style.background = `linear-gradient(180deg, ${c1} 0%, ${c2} 100%)`;
+    }
+
+    function processDataList(key) {
+        const data = rawData[key];
+        let list = [];
+        if (Array.isArray(data)) {
+            list = data.map(item => {
+                const nameKey = Object.keys(item).find(k => !['value','值'].includes(k)) || Object.keys(item)[0];
+                const valKey = Object.keys(item).find(k => ['value','val','值'].includes(k)) || Object.keys(item)[1];
+                return { name: item[nameKey], value: parseFloat(item[valKey]) || 0 };
+            });
+        } else {
+            list = Object.entries(data).map(([k,v]) => ({ name: k, value: parseFloat(v) || 0 }));
+        }
+        return list.sort((a,b) => b.value - a.value);
+    }
+
+    function prepareCompareData() {
+        const k1 = document.getElementById('select-left').value;
+        const k2 = document.getElementById('select-right').value;
+        
+        if (k1 === k2) {
+            alert("请选择不同的对比项");
+            return false;
+        }
+
+        const list1 = processDataList(k1);
+        const list2 = processDataList(k2);
+        const maxLen = Math.max(list1.length, list2.length);
+
+        compareList = [];
+        for(let i=0; i<maxLen; i++) {
+            compareList.push({
+                rank: i + 1,
+                left: list1[i] || { name: '-', value: 0 },
+                right: list2[i] || { name: '-', value: 0 }
+            });
+        }
+        return true;
+    }
+
+    function resetStage() {
+        document.getElementById('rank-list').innerHTML = '';
+        currentRowIndex = 0;
+        isAnimating = false;
+        clearTimeout(animationTimer);
+    }
+
+    function startAnimation() {
+        if (!prepareCompareData()) return;
+        resetStage();
+        isAnimating = true;
+        
+        const interval = parseFloat(document.getElementById('interval-input').value) * 1000;
+        
+        function nextFrame() {
+            if (!isAnimating || currentRowIndex >= compareList.length) {
+                isAnimating = false;
+                const list = document.getElementById('rank-list');
+                list.style.transform = 'translateY(0)';
+                if (isRecording) stopRecording();
+                if (isExporting && exportMode !== 'canvas') finishExport();
+                return;
+            }
+
+            const item = compareList[currentRowIndex];
+            addRankRow(item);
+            
+            // 滚动逻辑
+            const container = document.getElementById('stage-content');
+            const list = document.getElementById('rank-list');
+            const rowHeight = 86;
+            
+            // 如果列表高度超过容器，向上滚动
+            const maxVisible = Math.floor(container.clientHeight / rowHeight);
+            if (currentRowIndex >= maxVisible - 1) {
+                // 保持最后一行可见
+                // 简单的 transform 实现
+                const offset = (currentRowIndex - (maxVisible - 2)) * rowHeight;
+                list.style.transform = `translateY(-${offset}px)`;
+            }
+
+            currentRowIndex++;
+            animationTimer = setTimeout(nextFrame, interval);
+        }
+
+        nextFrame();
+    }
+
+    // --- 导出视频（仅 video-stage 区域） ---
+    async function exportVideo() {
+        if (isExporting) return;
+        if (!prepareCompareData()) return;
+        resetStage();
+        exportMode = 'canvas';
+        isExporting = true;
+
+        const stage = document.getElementById('video-stage');
+        const recBadge = document.getElementById('recording-status');
+        recBadge.style.display = 'flex';
+
+        const width = stage.clientWidth;
+        const height = stage.clientHeight;
+        const dpr = window.devicePixelRatio || 1;
+        exportCanvas = document.createElement('canvas');
+        exportCanvas.width = width * dpr;
+        exportCanvas.height = height * dpr;
+        exportCtx = exportCanvas.getContext('2d');
+        exportCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        let mimeType;
+        if (MediaRecorder.isTypeSupported('video/mp4')) {
+            mimeType = 'video/mp4';
+        } else if (MediaRecorder.isTypeSupported('video/mp4;codecs=avc1')) {
+            mimeType = 'video/mp4;codecs=avc1';
+        } else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) {
+            mimeType = 'video/webm;codecs=vp9';
+        } else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8')) {
+            mimeType = 'video/webm;codecs=vp8';
+        } else {
+            mimeType = 'video/webm';
+        }
+
+        const stream = exportCanvas.captureStream(60);
+        mediaRecorder = new MediaRecorder(stream, {
+            mimeType,
+            videoBitsPerSecond: 8000000
+        });
+        recordedChunks = [];
+        mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+        mediaRecorder.onstop = () => {
+            const blob = new Blob(recordedChunks, { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
+            a.download = `video_stage_${Date.now()}.${ext}`;
+            document.body.appendChild(a);
+            a.click();
+            URL.revokeObjectURL(url);
+            isExporting = false;
+            recBadge.style.display = 'none';
+            if (exportRAF) { cancelAnimationFrame(exportRAF); exportRAF = null; }
+            exportCanvas = null; exportCtx = null;
+            resizeStage();
+        };
+        mediaRecorder.start(100);
+
+        const interval = parseFloat(document.getElementById('interval-input').value) * 1000;
+        const rowAnim = 500;
+        const barDelay = 300;
+        const barDuration = 1000;
+        const postScroll = 500;
+        const tailHold = 1200;
+        const lastRowTime = Math.max(0, compareList.length - 1) * interval;
+        const lastBarEnd = lastRowTime + barDelay + barDuration;
+        const postScrollStart = Math.max(compareList.length * interval, lastBarEnd);
+        exportDuration = postScrollStart + postScroll + tailHold;
+        exportStartTime = performance.now();
+
+        const drawLoop = () => {
+            if (!isExporting || mediaRecorder.state === 'inactive') return;
+            const now = performance.now();
+            const elapsed = now - exportStartTime;
+            renderExportFrame(exportCtx, width, height, elapsed, interval);
+            if (elapsed >= exportDuration) {
+                finishExport();
+                return;
+            }
+            exportRAF = requestAnimationFrame(drawLoop);
+        };
+        drawLoop();
+
+        if (!isAnimating) startAnimation();
+    }
+
+    function finishExport() {
+        const recBadge = document.getElementById('recording-status');
+        if (isExporting && mediaRecorder && mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
+        } else {
+            isExporting = false;
+            recBadge.style.display = 'none';
+            if (exportRAF) { cancelAnimationFrame(exportRAF); exportRAF = null; }
+            exportCanvas = null; exportCtx = null;
+            resizeStage();
+        }
+    }
+
+    function addRankRow(data) {
+        const container = document.getElementById('rank-list');
+        const row = document.createElement('div');
+        row.className = 'rank-row';
+        
+        // 导出动画：记录出现时间用于 Canvas 动画
+        const appearIndex = currentRowIndex;
+        if (!window.rowAppearTimes) window.rowAppearTimes = {};
+        window.rowAppearTimes[appearIndex] = performance.now();
+
+        // 计算相对比例（基于两者中较大值，或者全局最大值？这里用两者最大值）
+        const maxVal = Math.max(data.left.value, data.right.value) || 1;
+        const leftPct = (data.left.value / maxVal) * 100;
+        const rightPct = (data.right.value / maxVal) * 100;
+
+        const leftWin = '';
+        const rightWin = '';
+        const leftSideClass = data.left.value > data.right.value ? 'side-win' : (data.left.value < data.right.value ? 'side-lose' : '');
+        const rightSideClass = data.right.value > data.left.value ? 'side-win' : (data.right.value < data.left.value ? 'side-lose' : '');
+
+        row.innerHTML = `
+            <div class="divider"></div>
+            <div class="side side-left ${leftSideClass}">
+                <div class="item-name ${leftWin}">${data.left.name}</div>
+                <div class="item-value ${leftWin}">${data.left.value.toLocaleString()}</div>
+                <div class="bg-bar" style="width:0%" data-width="${leftPct}%"></div>
+            </div>
+            <div class="rank-badge">第${data.rank}名</div>
+            <div class="side side-right ${rightSideClass}">
+                <div class="item-name ${rightWin}">${data.right.name}</div>
+                <div class="item-value ${rightWin}">${data.right.value.toLocaleString()}</div>
+                <div class="bg-bar" style="width:0%" data-width="${rightPct}%"></div>
+            </div>
+        `;
+        
+        container.appendChild(row);
+        
+        // 触发进场动画
+        requestAnimationFrame(() => {
+            row.classList.add('show');
+            // 延迟触发进度条动画
+            setTimeout(() => {
+                const bars = row.querySelectorAll('.bg-bar');
+                bars.forEach(bar => bar.style.width = bar.dataset.width);
+            }, 300);
+        });
+    }
+
+    // Canvas 导出帧渲染（尽量复刻 DOM 风格）
+    function renderExportFrame(ctx, width, height, elapsed, interval) {
+        // 背景
+        const c1 = document.getElementById('bg-color-1').value;
+        const c2 = document.getElementById('bg-color-2').value;
+        const bg = ctx.createLinearGradient(0, 0, 0, height);
+        bg.addColorStop(0, c1);
+        bg.addColorStop(1, c2);
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, width, height);
+
+        // 圆角描边
+        ctx.strokeStyle = 'rgba(46,224,255,0.25)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(0.5, 0.5, width - 1, height - 1);
+
+        // 头部
+        const headerH = 110;
+        ctx.fillStyle = 'rgba(9,14,30,0.7)';
+        ctx.fillRect(0, 0, width, headerH);
+        ctx.strokeStyle = 'rgba(46,224,255,0.25)';
+        ctx.beginPath();
+        ctx.moveTo(0, headerH + 0.5);
+        ctx.lineTo(width, headerH + 0.5);
+        ctx.stroke();
+
+        // 标题
+        const title = document.getElementById('disp-title').innerText;
+        const subtitle = document.getElementById('disp-subtitle').innerText;
+        const titleGrad = ctx.createLinearGradient(0, 0, width, 0);
+        titleGrad.addColorStop(0, '#7cf9ff');
+        titleGrad.addColorStop(0.5, '#7c3aed');
+        titleGrad.addColorStop(1, '#00f2fe');
+        ctx.fillStyle = titleGrad;
+        ctx.font = '800 32px Segoe UI, Roboto, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(title, width / 2, 42);
+
+        ctx.fillStyle = '#a7b4d6';
+        ctx.font = '16px Segoe UI, Roboto, sans-serif';
+        ctx.fillText(subtitle, width / 2, 78);
+
+        // 列表区域
+        const listTop = headerH + 12;
+        const rowHeight = 74;
+        const gap = 12;
+        const contentPadding = 12;
+        const maxVisible = Math.floor((height - listTop - contentPadding) / (rowHeight + gap));
+
+        const totalRowsShown = Math.min(compareList.length, Math.floor(elapsed / interval) + 1);
+        const naturalOverflow = Math.max(0, totalRowsShown - maxVisible);
+        const rowStep = rowHeight + gap;
+        const rowAnim = 500;
+        const barDelay = 300;
+        const barDuration = 1000;
+        const lastRowTime = Math.max(0, compareList.length - 1) * interval;
+        const lastBarEnd = lastRowTime + barDelay + barDuration;
+        const postScrollStart = Math.max(compareList.length * interval, lastBarEnd);
+        const postScrollDuration = 500;
+        let currentScroll = -naturalOverflow * rowStep;
+        if (elapsed >= postScrollStart) {
+            const t = Math.max(0, Math.min((elapsed - postScrollStart) / postScrollDuration, 1));
+            currentScroll = currentScroll * (1 - t);
+        }
+
+        for (let i = 0; i < totalRowsShown; i++) {
+            const item = compareList[i];
+            const yBase = listTop + i * rowStep + currentScroll;
+            if (yBase > height || yBase + rowHeight < listTop - rowStep) continue;
+
+            // 进场动画
+            let appearT = window.rowAppearTimes && window.rowAppearTimes[i] ? window.rowAppearTimes[i] : exportStartTime;
+            let p = Math.min((elapsed - (i * interval)) / 500, 1);
+            p = Math.max(0, p);
+            const ease = p < 1 ? (1 - Math.pow(1 - p, 3)) : 1;
+
+            const y = yBase + (1 - ease) * 20;
+            const alpha = ease;
+
+            ctx.globalAlpha = alpha;
+
+            // 行背景
+            const rowGrad = ctx.createLinearGradient(0, y, width, y);
+            rowGrad.addColorStop(0, 'rgba(9,14,30,0.8)');
+            rowGrad.addColorStop(1, 'rgba(13,22,44,0.9)');
+            ctx.fillStyle = rowGrad;
+            ctx.strokeStyle = 'rgba(46,224,255,0.2)';
+            ctx.lineWidth = 1;
+            ctx.fillRect(contentPadding, y, width - contentPadding * 2, rowHeight);
+            ctx.strokeRect(contentPadding + 0.5, y + 0.5, width - contentPadding * 2 - 1, rowHeight - 1);
+
+            // 行内中线（与 DOM 一致，仅在该行内绘制）
+            ctx.fillStyle = 'rgba(46,224,255,0.35)';
+            ctx.fillRect(width / 2 - 1, y, 2, rowHeight);
+
+            // 两侧区域
+            const leftRect = [contentPadding, y, (width / 2) - contentPadding, rowHeight];
+            const rightRect = [(width / 2), y, (width / 2) - contentPadding, rowHeight];
+
+            const lVal = item.left.value || 0;
+            const rVal = item.right.value || 0;
+            const maxVal = Math.max(lVal, rVal) || 1;
+            const lPct = lVal / maxVal;
+            const rPct = rVal / maxVal;
+
+            // 胜负背景微光
+            if (lVal > rVal) {
+                ctx.fillStyle = 'rgba(0,242,254,0.18)';
+                ctx.fillRect(leftRect[0], leftRect[1], leftRect[2], leftRect[3]);
+            } else if (rVal > lVal) {
+                ctx.fillStyle = 'rgba(255,75,31,0.18)';
+                ctx.fillRect(rightRect[0], rightRect[1], rightRect[2], rightRect[3]);
+            }
+
+            // 文本
+            ctx.fillStyle = '#e6f1ff';
+            ctx.font = '700 16px Segoe UI, Roboto, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(item.left.name, leftRect[0] + leftRect[2] / 2, y + 22);
+            ctx.fillText(item.right.name, rightRect[0] + rightRect[2] / 2, y + 22);
+
+            ctx.font = '28px Impact, sans-serif';
+            ctx.fillText((lVal || 0).toLocaleString(), leftRect[0] + leftRect[2] / 2, y + 50);
+            ctx.fillText((rVal || 0).toLocaleString(), rightRect[0] + rightRect[2] / 2, y + 50);
+
+            // 进度条动画
+            const barStart = 300;
+            const barAnim = Math.max(0, Math.min((elapsed - (i * interval) - barStart) / 1000, 1));
+            const barEase = barAnim < 1 ? (1 - Math.pow(1 - barAnim, 2)) : 1;
+
+            // 左条
+            ctx.fillStyle = '#00f2fe';
+            ctx.fillRect(leftRect[0] + leftRect[2] * (1 - lPct * barEase), y + rowHeight - 6, leftRect[2] * lPct * barEase, 5);
+            // 右条
+            ctx.fillStyle = '#ff4b1f';
+            ctx.fillRect(rightRect[0], y + rowHeight - 6, rightRect[2] * rPct * barEase, 5);
+
+            // 排名胶囊
+            const badgeW = 68;
+            const badgeH = 24;
+            const badgeX = width / 2 - badgeW / 2;
+            const badgeY = y + rowHeight / 2 - badgeH / 2;
+            ctx.fillStyle = 'rgba(10,16,32,0.7)';
+            ctx.strokeStyle = 'rgba(46,224,255,0.35)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            const r = badgeH / 2;
+            ctx.moveTo(badgeX + r, badgeY);
+            ctx.arc(badgeX + badgeW - r, badgeY + r, r, -Math.PI / 2, Math.PI / 2);
+            ctx.arc(badgeX + r, badgeY + r, r, Math.PI / 2, -Math.PI / 2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = '#cfe9ff';
+            ctx.font = '700 12px Segoe UI, Roboto, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`第${item.rank}名`, width / 2, y + rowHeight / 2);
+
+            ctx.globalAlpha = 1;
+        }
+    }
+
+    function stopRecording() {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
+        }
+    }
+
+</script>
+</body>
+</html>
