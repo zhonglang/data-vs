@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>城市数据对比视频生成器</title>
+    <!-- 引入圆润字体 Quicksand -->
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-color: #0b0f1f;
@@ -25,9 +27,9 @@
         body {
             background: radial-gradient(1200px 800px at 20% 10%, rgba(46,224,255,0.12), transparent 60%),
                         radial-gradient(900px 700px at 90% 20%, rgba(124,58,237,0.18), transparent 55%),
-                        linear-gradient(180deg, #090c1a 0%, #0b1024 100%);
+                        linear-gradient(180deg, #f8fbff 0%, #eef6ff 100%);
             color: var(--text-color);
-            font-family: 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Quicksand', 'Nunito', 'Segoe UI', Roboto, sans-serif;
             height: 100vh;
             display: flex;
             overflow: hidden;
@@ -276,7 +278,7 @@
          "深圳市": 38731.8, "广州市": 32039.46, "佛山市": 13157.35, "东莞市": 12760.2, 
          "惠州市": 6363.66, "珠海市": 4573.1, "江门市": 4293.91, "中山市": 4260.56, 
          "茂名市": 4106.4, "湛江市": 3952.94, "汕头市": 3023.83, "肇庆市": 2974.84, 
-         "揭阳市": 2553.75, "清远市": 2317.47
+         "揭阳市": 2553.75
        }, 
        "江苏省": { 
          "苏州市": 27695.1, "南京市": 19428.78, "无锡市": 16773.94, "南通市": 12801.5, 
@@ -310,14 +312,30 @@
         canvas = document.getElementById('main-canvas');
         ctx = canvas.getContext('2d');
 
+        setupHiDPICanvas();
+
         document.getElementById('json-input').value = JSON.stringify(defaultData, null, 2);
         parseData(); // 自动解析
         resizeStage(); // 适配屏幕
         window.addEventListener('resize', resizeStage);
         
-        // 初始绘制
-        drawStatic();
+        // 初始绘制 - 等待字体加载
+        document.fonts.ready.then(() => {
+            drawStatic();
+        });
     };
+
+    function setupHiDPICanvas() {
+        const dpr = window.devicePixelRatio || 1;
+        // 物理像素放大
+        canvas.width = CANVAS_WIDTH * dpr;
+        canvas.height = CANVAS_HEIGHT * dpr;
+        // 逻辑像素保持不变
+        canvas.style.width = `${CANVAS_WIDTH}px`;
+        canvas.style.height = `${CANVAS_HEIGHT}px`;
+        // 坐标系缩放
+        ctx.scale(dpr, dpr);
+    }
 
     function resizeStage() {
         const container = document.getElementById('preview-area');
@@ -593,17 +611,16 @@
         const subtitle = document.getElementById('input-subtitle').value;
         
         const titleGrad = ctx.createLinearGradient(0, 0, CANVAS_WIDTH, 0);
-        titleGrad.addColorStop(0, '#7cf9ff');
-        titleGrad.addColorStop(0.5, '#7c3aed');
-        titleGrad.addColorStop(1, '#00f2fe');
+        titleGrad.addColorStop(0, '#ffffff');
+        titleGrad.addColorStop(1, '#e6f1ff');
         ctx.fillStyle = titleGrad;
-        ctx.font = '800 32px Segoe UI, Roboto, sans-serif';
+        ctx.font = '700 32px Quicksand, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(title, CANVAS_WIDTH / 2, 42);
 
-        ctx.fillStyle = '#a7b4d6';
-        ctx.font = '16px Segoe UI, Roboto, sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '600 16px Quicksand, sans-serif';
         ctx.fillText(subtitle, CANVAS_WIDTH / 2, 78);
 
         // 如果是静态模式（仅背景），直接返回
@@ -714,16 +731,28 @@
         }
 
         // 文本
-        ctx.fillStyle = '#e6f1ff';
-        ctx.font = '700 16px Segoe UI, Roboto, sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '600 16px Quicksand, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(item.left.name, leftRect[0] + leftRect[2] / 2, currentY + 22);
         ctx.fillText(item.right.name, rightRect[0] + rightRect[2] / 2, currentY + 22);
 
-        ctx.font = '28px Impact, sans-serif';
+        ctx.font = '700 26px Quicksand, sans-serif';
         ctx.fillText(lVal.toLocaleString(), leftRect[0] + leftRect[2] / 2, currentY + 50);
         ctx.fillText(rVal.toLocaleString(), rightRect[0] + rightRect[2] / 2, currentY + 50);
+
+        // 绘制胜者点赞符号
+        ctx.font = '20px Segoe UI Emoji, sans-serif';
+        if (lVal > rVal) {
+             // 左侧胜，绘制在数值右侧
+             const textWidth = ctx.measureText(lVal.toLocaleString()).width;
+             ctx.fillText('👍', leftRect[0] + leftRect[2] / 2 + textWidth / 2 + 30, currentY + 48);
+        } else if (rVal > lVal) {
+             // 右侧胜，绘制在数值右侧
+             const textWidth = ctx.measureText(rVal.toLocaleString()).width;
+             ctx.fillText('👍', rightRect[0] + rightRect[2] / 2 + textWidth / 2 + 30, currentY + 48);
+        }
 
         // 进度条动画 (在行出现后 300ms 开始)
         const barStart = startTime + 300;
@@ -758,8 +787,8 @@
         ctx.fill();
         ctx.stroke();
 
-        ctx.fillStyle = '#cfe9ff';
-        ctx.font = '700 12px Segoe UI, Roboto, sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '600 12px Quicksand, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(`第${item.rank}名`, CANVAS_WIDTH / 2, currentY + h / 2);
